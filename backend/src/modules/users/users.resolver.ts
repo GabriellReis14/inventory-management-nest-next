@@ -9,8 +9,14 @@ export class UsersResolver {
   constructor(private readonly usersService: UsersService) { }
 
   @Mutation(() => User)
-  create(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return this.usersService.create(createUserInput);
+  async createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
+    const user = await this.findOne(createUserInput?.email);
+
+    if (user) {
+      throw new Error("E-mail já cadastrado.");
+    };
+
+    return this.usersService.createUser(createUserInput);
   }
 
   @Query(() => [User], { name: "users" })
@@ -24,12 +30,12 @@ export class UsersResolver {
   }
 
   @Mutation(() => User)
-  update(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return this.usersService.update(updateUserInput.id, updateUserInput);
+  updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
+    return this.usersService.updateUser(updateUserInput.id, updateUserInput);
   }
 
   @Mutation(() => User)
-  remove(@Args('id') id: number) {
-    return this.usersService.remove(id);
+  removeUser(@Args('id') id: number) {
+    return this.usersService.removeUser(id);
   }
 }

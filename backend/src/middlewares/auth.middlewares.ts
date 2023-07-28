@@ -18,6 +18,10 @@ export class AuthMiddleware implements NestMiddleware {
       return next();
     }
 
+    if (body && body.query.includes("createUser")) {
+      return next();
+    }
+
     const bearerHeader = req.headers.authorization;
     const accessToken = bearerHeader && bearerHeader.split(' ')[1];
 

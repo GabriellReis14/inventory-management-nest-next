@@ -3,7 +3,7 @@
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Demo } from '../../types/types';
 import { useMutation, useQuery } from '@apollo/client';
 import { CREATE_PRODUCT_MUTATION, REMOVE_PRODUCT_MUTATION, UPDATE_PRODUCT_MUTATION } from '../api/graphQL/mutations/products';
@@ -12,27 +12,33 @@ import { Modal } from '../../components/Modal';
 import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { useFormik } from 'formik';
+import { useRouter } from 'next/router';
 import * as Yup from "yup";
 import { checkAuthentication } from '../../utils/auth';
 import { NextPage } from 'next';
 
+
 interface HomeProps {
   isAuthenticated?: boolean;
 }
-const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
+const HomePage: NextPage<HomeProps> = (props) => {
 
-  if (!isAuthenticated) {
-    // useEffect(() => {
-    //   window.location.href = '/auth/login';
-    // }, []);
-    // return null;
-  };
+
+  const route = useRouter();
+  useEffect(() => {
+    const isAuthenticated = checkAuthentication();
+    if (!isAuthenticated) {
+
+      route.push("/auth/login")
+      // window.location.href = '/auth/login';
+
+    }
+  }, []);
 
   const toastRef = useRef<Toast>(null);
-  const [products, setProducts] = useState<Demo.Product[]>([]);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const { loading, error, data, refetch } = useQuery(GET_PRODUCTS_QUERY);
- 
+
   const [updateProduct] = useMutation(UPDATE_PRODUCT_MUTATION);
   const [createProduct] = useMutation(CREATE_PRODUCT_MUTATION);
   const [removeProduct] = useMutation(REMOVE_PRODUCT_MUTATION);
@@ -85,12 +91,12 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
 
       refetch();
       handleCloseModal();
-    } catch (error) {
+    } catch (error: any) {
 
       toastRef?.current?.show({
-        severity: "error",
+        severity: error?.message ? "warn" : "error",
         summary: "Erro!",
-        detail: "Ocorreu um erro ao cadastrar o produto!",
+        detail: error?.message ?? "Ocorreu um erro",
         life: 2000,
       });
 
@@ -111,12 +117,12 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
       });
 
       refetch();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toastRef?.current?.show({
-        severity: "error",
+        severity: error?.message ? "warn" : "error",
         summary: "Erro!",
-        detail: "Ocorreu um erro ao deletar o produto!",
+        detail: error?.message ?? "Ocorreu um erro ao deletar o produto.",
         life: 2000,
       });
     }
@@ -159,20 +165,14 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
   const getTotalStock = () => {
     let quantity: number = 0;
 
-    if (products.length > 0) {
-      products?.forEach((v) => {
+    if (data?.products.length > 0) {
+      data?.products?.forEach((v: any) => {
         quantity += v?.stock
       })
     }
 
     return quantity;
   }
-
-  useEffect(() => {
-    if (!!data) {
-      setProducts(data?.products);
-    };
-  }, [data]);
 
   return (
     <div className="grid">
@@ -181,7 +181,7 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
           <div className="flex justify-content-between mb-3">
             <div>
               <span className="block text-500 font-medium mb-3">Total de produtos</span>
-              <div className="text-900 font-medium text-xl">{products?.length}</div>
+              <div className="text-900 font-medium text-xl">{data?.products?.length}</div>
             </div>
             <div className="flex align-items-center justify-content-center bg-blue-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
               <i className="pi pi-shopping-cart text-blue-500 text-xl" />
@@ -210,7 +210,7 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
           <div className='my-5'>
             <Button severity="success" icon="pi pi-plus" label="Novo" onClick={openModal} />
           </div>
-          <DataTable value={products} rows={5} paginator responsiveLayout="scroll">
+          <DataTable value={data?.products} rows={5} paginator responsiveLayout="scroll">
             <Column field="id" header="Código" sortable />
             <Column field="description" header="Descrição" sortable style={{ width: '35%' }} />
             <Column field="stock" header="Estoque" sortable style={{ width: '35%' }} />
@@ -265,8 +265,6 @@ const HomePage: NextPage<HomeProps> = (props, { isAuthenticated }) => {
 
 export async function getServerSideProps(context: any) {
   const isAuthenticated = checkAuthentication();
-
-  console.log(isAuthenticated)
 
   if (!isAuthenticated) {
     return {

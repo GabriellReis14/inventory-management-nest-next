@@ -1,13 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRouter } from 'next/router';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import { Button } from 'primereact/button';
 import { Password } from 'primereact/password';
 import { LayoutContext } from '../../../layout/context/layoutcontext';
 import { InputText } from 'primereact/inputtext';
 import { classNames } from 'primereact/utils';
 import { Page } from ',,/../../types/types';
+import { Toast } from 'primereact/toast';
 
 import { useFormik, FormikValues } from 'formik';
 import * as Yup from "yup";
@@ -16,22 +17,22 @@ import { ApolloProvider, useMutation } from '@apollo/client';
 import { CREATE_PRODUCT_MUTATION } from '../../api/graphQL/mutations/products';
 import client from '../../api/apolloClient';
 import { setAuthenticationCookie } from '../../../utils/auth';
+import Link from 'next/link';
 
 const LoginPage: Page = () => {
-	const [password, setPassword] = useState('');
-	const [checked, setChecked] = useState(false);
+	const toastRef = useRef<Toast>(null);
 	const { layoutConfig } = useContext(LayoutContext);
-
 	const router = useRouter();
 	const containerClassName = classNames('surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden', { 'p-input-filled': layoutConfig.inputStyle === 'filled' });
 
+	const [signing, setSigning] = useState<boolean>(false)
 	const [signIn] = useMutation(SIGN_IN_MUTATION);
 
 	const handleSubmit = async (values: FormikValues) => {
 		const { email, password } = values;
-		
-		try {
 
+		try {
+			setSigning(true);
 			const response = await signIn({
 				variables: {
 					signIn: {
@@ -43,8 +44,16 @@ const LoginPage: Page = () => {
 
 			setAuthenticationCookie(response?.data?.signIn?.token);
 
-		} catch (error) {
-			console.log(error)
+			router.push('/');
+			setSigning(false);
+		} catch (error: any) {
+			toastRef.current?.show({
+				severity: "warn",
+				summary: "Atenção!",
+				detail: error?.message ?? "Ocorreu algum erro",
+				life: 2000,
+			});
+			setSigning(false);
 		};
 	};
 
@@ -104,12 +113,21 @@ const LoginPage: Page = () => {
 									inputClassName="w-full p-3"
 								/>
 								{formik.errors.password && <small className="p-error text-lg">{formik.errors.password}</small>}
+
 							</div>
-							<Button label="ENTRAR" type="submit" className="w-full p-3 text-xl" />
+
+
+							<Button label="ENTRAR" type="submit" disabled={signing} className="w-full p-3 text-xl">
+								{signing && <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>}
+							</Button>
+							<div className='flex justify-content-center mt-3'>
+								<Link href='/auth/register' className="font-medium no-underline text-blue-500 text-center cursor-pointer">Registrar</Link>
+							</div>
 						</form>
 					</div>
 				</div>
 			</div>
+			<Toast ref={toastRef} position="top-right" />
 		</div>
 	);
 };

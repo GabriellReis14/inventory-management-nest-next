@@ -21,11 +21,11 @@ export default function MyApp({ Component, pageProps }: Props) {
   } else {
     return (
       <ApolloProvider client={client}>
-        <LayoutProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </LayoutProvider>
+          <LayoutProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </LayoutProvider>
       </ApolloProvider>
     );
   }

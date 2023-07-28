@@ -2,15 +2,24 @@
 
 import Link from 'next/link';
 import { classNames } from 'primereact/utils';
-import React, { forwardRef, useContext, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef } from 'react';
 import { AppTopbarRef } from '../types/types';
 import { LayoutContext } from './context/layoutcontext';
+import { useRouter } from 'next/router';
 
 const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
   const { layoutConfig, layoutState, onMenuToggle, showProfileSidebar } = useContext(LayoutContext);
   const menubuttonRef = useRef(null);
   const topbarmenuRef = useRef(null);
   const topbarmenubuttonRef = useRef(null);
+
+  const router = useRouter();
+
+  const signOut = () => {
+    localStorage.removeItem("token-atualiza-estoque");
+    router.push("/auth/login");
+  };
+
 
   useImperativeHandle(ref, () => ({
     menubutton: menubuttonRef.current,
@@ -34,12 +43,10 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
       </button>
 
       <div ref={topbarmenuRef} className={classNames('layout-topbar-menu', { 'layout-topbar-menu-mobile-active': layoutState.profileSidebarVisible })}>
-        <Link href="/auth/login">
-          <button type="button" className="p-link layout-topbar-button">
-            <i className="pi pi-user"></i>
-            <span>Profile</span>
-          </button>
-        </Link>
+        <button type="button" className="p-link layout-topbar-button" onClick={signOut}>
+          <i className="pi pi-user"></i>
+          <span>Profile</span>
+        </button>
       </div>
     </div>
   );

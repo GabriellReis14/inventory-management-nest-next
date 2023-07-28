@@ -8,7 +8,7 @@ import {hashSync, hash} from "bcrypt";
 export class UsersService {
   constructor(private prisma: PrismaService) { }
 
-  async create(createUserInput: CreateUserInput) {
+  async createUser(createUserInput: CreateUserInput) {
     try {
       const { password, ...rest } = createUserInput;
 
@@ -43,7 +43,7 @@ export class UsersService {
     return user;
   };
 
-  async update(id: number, updateUserInput: UpdateUserInput) {
+  async updateUser(id: number, updateUserInput: UpdateUserInput) {
     try {
 
       const updated = await this.prisma.users.update({
@@ -60,7 +60,7 @@ export class UsersService {
     }
   };
 
-  async remove(id: number) {
+  async removeUser(id: number) {
     try {
       const deleted = await this.prisma.users.delete({
         where: { id }
