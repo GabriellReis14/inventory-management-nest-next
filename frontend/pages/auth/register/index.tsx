@@ -15,12 +15,14 @@ import { useRouter } from "next/router";
 const Register: Page = () => {
   const toastRef = useRef<Toast>(null);
   const [createUser] = useMutation(CREATE_USERS_MUTATION);
+  const [registering, setRegistering] = useState<boolean>(false);
+
   const router = useRouter();
 
   const handleSubmit = async (values: FormikValues) => {
     const { email, password, isAdmin } = values;
     try {
-
+      setRegistering(true);
       await createUser({
         variables: {
           input: {
@@ -42,7 +44,6 @@ const Register: Page = () => {
         router.push("/auth/login");
       }, 2000);
 
-
     } catch (error: any) {
       toastRef?.current?.show({
         severity: "error",
@@ -50,13 +51,13 @@ const Register: Page = () => {
         detail: `Ocorreu um erro! \n ${error?.message}`,
         life: 2000,
       });
-
+      setRegistering(false)
     }
 
   };
 
   const formSchema = Yup.object().shape({
-    email: Yup.string().required("E-mail é obrigatório.").nullable(),
+    email: Yup.string().email("E-mail inválido").required("E-mail é obrigatório.").nullable(),
     password: Yup.string().required("Senha é obrigatório.").nullable(),
   });
 
@@ -114,7 +115,9 @@ const Register: Page = () => {
 
           </div>
 
-          <Button label="CADASTRAR" icon="pi pi-user" className="w-full" />
+          <Button type="submit" disabled={registering} label="CADASTRAR" icon="pi pi-user" className="w-full">
+            {registering && <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>}
+          </Button>
         </form>
       </div>
       <Toast ref={toastRef} position="top-right" />

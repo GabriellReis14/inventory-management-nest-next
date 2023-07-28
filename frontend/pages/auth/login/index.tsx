@@ -45,7 +45,6 @@ const LoginPage: Page = () => {
 			setAuthenticationCookie(response?.data?.signIn?.token);
 
 			router.push('/');
-			setSigning(false);
 		} catch (error: any) {
 			toastRef.current?.show({
 				severity: "warn",
@@ -58,7 +57,7 @@ const LoginPage: Page = () => {
 	};
 
 	const formSchema = Yup.object().shape({
-		email: Yup.string().required("E-mail é obrigatório.").nullable(),
+		email: Yup.string().email("E-mail inválido").required("E-mail é obrigatório.").nullable(),
 		password: Yup.string().required("Senha é obrigatório.").nullable(),
 	});
 
@@ -116,12 +115,11 @@ const LoginPage: Page = () => {
 
 							</div>
 
-
 							<Button label="ENTRAR" type="submit" disabled={signing} className="w-full p-3 text-xl">
 								{signing && <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>}
 							</Button>
 							<div className='flex justify-content-center mt-3'>
-								<Link href='/auth/register' className="font-medium no-underline text-blue-500 text-center cursor-pointer">Registrar</Link>
+								<Button disabled={signing} text onClick={() => router.push("/auth/register")} className="font-medium no-underline text-blue-500 text-center cursor-pointer">Registrar</Button>
 							</div>
 						</form>
 					</div>
