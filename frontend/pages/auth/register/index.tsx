@@ -28,7 +28,7 @@ const Register: Page = () => {
           input: {
             email,
             password,
-            isAdmin
+            isAdmin,
           },
         },
       });
@@ -43,7 +43,6 @@ const Register: Page = () => {
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
-
     } catch (error: any) {
       toastRef?.current?.show({
         severity: "error",
@@ -51,13 +50,15 @@ const Register: Page = () => {
         detail: `Ocorreu um erro! \n ${error?.message}`,
         life: 2000,
       });
-      setRegistering(false)
+      setRegistering(false);
     }
-
   };
 
   const formSchema = Yup.object().shape({
-    email: Yup.string().email("E-mail inválido").required("E-mail é obrigatório.").nullable(),
+    email: Yup.string()
+      .email("E-mail inválido")
+      .required("E-mail é obrigatório.")
+      .nullable(),
     password: Yup.string().required("Senha é obrigatório.").nullable(),
   });
 
@@ -65,42 +66,58 @@ const Register: Page = () => {
     initialValues: {
       email: "",
       password: "",
-      isAdmin: false
+      isAdmin: false,
     },
     onSubmit: handleSubmit,
-    validationSchema: formSchema
+    validationSchema: formSchema,
   });
 
   return (
     <div className="flex align-items-center h-screen justify-content-center">
       <div className="surface-card p-4 shadow-2 border-round w-full lg:w-4">
         <div className="text-center mb-5">
-          <div className="text-900 text-3xl font-medium mb-3">Seja bem-vindo!</div>
-          <span className="text-600 font-medium line-height-3">Registre sua conta para continuar!</span>
+          <div className="text-900 text-3xl font-medium mb-3">
+            Seja bem-vindo!
+          </div>
+          <span className="text-600 font-medium line-height-3">
+            Registre sua conta para continuar!
+          </span>
         </div>
 
         <form onSubmit={formik.handleSubmit}>
-          <label htmlFor="email" className="block text-900 font-medium my-2">E-mail</label>
+          <label htmlFor="email" className="block text-900 font-medium my-2">
+            E-mail
+          </label>
           <InputText
             id="email"
             type="text"
             placeholder="E-mail"
-            className={classNames("w-full", { "p-invalid": formik?.errors?.email })}
+            className={classNames("w-full", {
+              "p-invalid": formik?.errors?.email,
+            })}
             value={formik?.values?.email}
             onChange={formik.handleChange}
           />
-          {formik?.errors?.email && <small className="p-error">{formik?.errors?.email}</small>}
+          {formik?.errors?.email && (
+            <small className="p-error">{formik?.errors?.email}</small>
+          )}
 
-          <label htmlFor="password" className="block text-900 font-medium my-2">Senha</label>
+          <label htmlFor="password" className="block text-900 font-medium my-2">
+            Senha
+          </label>
           <InputText
             id="password"
             type="password"
             placeholder="Senha"
-            className={classNames("w-full", { "p-invalid": formik?.errors?.password })}
+            className={classNames("w-full", {
+              "p-invalid": formik?.errors?.password,
+            })}
             value={formik?.values?.password}
             onChange={formik.handleChange}
           />
-          {formik?.errors?.password && <small className="p-error">{formik?.errors?.password}</small>}
+          {formik?.errors?.password && (
+            <small className="p-error">{formik?.errors?.password}</small>
+          )}
 
           <div className="flex align-items-center justify-content-between mt-3 mb-6">
             <div className="flex align-items-center">
@@ -110,28 +127,37 @@ const Register: Page = () => {
                 checked={formik?.values?.isAdmin}
                 className="mr-2"
               />
-              <label htmlFor="isAdmin" className="text-900">É administrador?</label>
+              <label htmlFor="isAdmin" className="text-900">
+                É administrador?
+              </label>
             </div>
-
           </div>
 
-          <Button type="submit" disabled={registering} label="CADASTRAR" icon="pi pi-user" className="w-full">
-            {registering && <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>}
+          <Button
+            type="submit"
+            disabled={registering}
+            label="CADASTRAR"
+            icon="pi pi-user"
+            className="w-full"
+          >
+            {registering && (
+              <i
+                className="pi pi-spin pi-spinner"
+                style={{ fontSize: "2rem" }}
+              ></i>
+            )}
           </Button>
         </form>
       </div>
       <Toast ref={toastRef} position="top-right" />
     </div>
-
-  )
+  );
 };
 
 Register.getLayout = function getLayout(page) {
   return (
     <ApolloProvider client={client}>
-      <React.Fragment>
-        {page}
-      </React.Fragment>
+      <React.Fragment>{page}</React.Fragment>
     </ApolloProvider>
   );
 };

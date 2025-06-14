@@ -1,4 +1,4 @@
-const cookieName = 'token-atualiza-estoque';
+const cookieName = "token-inventory-management";
 
 export function setAuthenticationCookie(token: string) {
   localStorage.setItem(cookieName, token);

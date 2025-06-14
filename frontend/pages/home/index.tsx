@@ -1,43 +1,42 @@
 /* eslint-disable @next/next/no-img-element */
 
-import { Button } from 'primereact/button';
-import { Column } from 'primereact/column';
-import { DataTable } from 'primereact/datatable';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Demo } from '../../types/types';
-import { useMutation, useQuery } from '@apollo/client';
-import { CREATE_PRODUCT_MUTATION, REMOVE_PRODUCT_MUTATION, UPDATE_PRODUCT_MUTATION } from '../api/graphQL/mutations/products';
-import { GET_PRODUCTS_QUERY } from '../api/graphQL/querys';
-import { Modal } from '../../components/Modal';
-import { InputText } from 'primereact/inputtext';
-import { Toast } from 'primereact/toast';
-import { useFormik } from 'formik';
-import { useRouter } from 'next/router';
+import React, { useEffect, useRef, useState } from "react";
+import { NextPage } from "next";
+import { Button } from "primereact/button";
+import { Column } from "primereact/column";
+import { DataTable } from "primereact/datatable";
+import { InputText } from "primereact/inputtext";
+import { Toast } from "primereact/toast";
+import { confirmDialog } from "primereact/confirmdialog";
+import { useFormik } from "formik";
+import { useRouter } from "next/router";
 import * as Yup from "yup";
-import { checkAuthentication } from '../../utils/auth';
-import { NextPage } from 'next';
-
+import { useMutation, useQuery } from "@apollo/client";
+import {
+  CREATE_PRODUCT_MUTATION,
+  REMOVE_PRODUCT_MUTATION,
+  UPDATE_PRODUCT_MUTATION,
+} from "../api/graphQL/mutations/products";
+import { GET_PRODUCTS_QUERY } from "../api/graphQL/querys";
+import { Modal } from "../../components/Modal";
+import { checkAuthentication } from "../../utils/auth";
 
 interface HomeProps {
   isAuthenticated?: boolean;
 }
 const HomePage: NextPage<HomeProps> = (props) => {
+  const router = useRouter();
 
-
-  const route = useRouter();
   useEffect(() => {
     const isAuthenticated = checkAuthentication();
     if (!isAuthenticated) {
-
-      route.push("/auth/login")
-      // window.location.href = '/auth/login';
-
+      router.push("/auth/login");
     }
   }, []);
 
   const toastRef = useRef<Toast>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const { loading, error, data, refetch } = useQuery(GET_PRODUCTS_QUERY);
+  const { error, data, refetch } = useQuery(GET_PRODUCTS_QUERY);
 
   const [updateProduct] = useMutation(UPDATE_PRODUCT_MUTATION);
   const [createProduct] = useMutation(CREATE_PRODUCT_MUTATION);
@@ -55,7 +54,7 @@ const HomePage: NextPage<HomeProps> = (props) => {
   const handleSubmit = async (values: any) => {
     const { id, description, stock } = values;
     try {
-      let msg: string = '';
+      let msg: string = "";
 
       if (!!id) {
         await updateProduct({
@@ -92,40 +91,47 @@ const HomePage: NextPage<HomeProps> = (props) => {
       refetch();
       handleCloseModal();
     } catch (error: any) {
-
       toastRef?.current?.show({
         severity: error?.message ? "warn" : "error",
         summary: "Erro!",
         detail: error?.message ?? "Ocorreu um erro",
         life: 2000,
       });
-
-    };
+    }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await removeProduct({
-        variables: { id },
-      });
+  const handleDelete = (id: number) => {
+    confirmDialog({
+      message: "Você tem certeza que deseja deletar este produto?",
+      header: "Confirmação",
+      icon: "pi pi-exclamation-triangle",
+      acceptLabel: "Sim",
+      rejectLabel: "Não",
+      accept: async () => {
+        try {
+          await removeProduct({
+            variables: { id },
+          });
 
-      toastRef?.current?.show({
-        severity: "success",
-        summary: "Sucesso!",
-        detail: "Produto deletado com sucesso!",
-        life: 2000,
-      });
+          toastRef?.current?.show({
+            severity: "success",
+            summary: "Sucesso!",
+            detail: "Produto deletado com sucesso!",
+            life: 2000,
+          });
 
-      refetch();
-    } catch (error: any) {
-      console.error(error);
-      toastRef?.current?.show({
-        severity: error?.message ? "warn" : "error",
-        summary: "Erro!",
-        detail: error?.message ?? "Ocorreu um erro ao deletar o produto.",
-        life: 2000,
-      });
-    }
+          refetch();
+        } catch (error: any) {
+          console.error(error);
+          toastRef?.current?.show({
+            severity: error?.message ? "warn" : "error",
+            summary: "Erro!",
+            detail: error?.message ?? "Ocorreu um erro ao deletar o produto.",
+            life: 2000,
+          });
+        }
+      },
+    });
   };
 
   const formSchema = Yup.object().shape({
@@ -136,10 +142,13 @@ const HomePage: NextPage<HomeProps> = (props) => {
   const formik = useFormik({
     initialValues: {
       description: "",
-      stock: 0
+      stock: 0,
     },
     onSubmit: handleSubmit,
-    validationSchema: formSchema
+    validationSchema: formSchema,
+    validateOnChange: false,
+    validateOnBlur: false,
+    validateOnMount: false,
   });
 
   const handleCloseModal = () => {
@@ -149,16 +158,26 @@ const HomePage: NextPage<HomeProps> = (props) => {
 
   const openModal = (values?: any) => {
     if (values) {
-
-      formik.setValues(values)
+      formik.setValues(values);
     }
     setModalVisible(true);
-  }
+  };
 
   const footerContent = (
     <div className="footer">
-      <Button label='Cancelar' type="button" onClick={handleCloseModal} severity="danger" text />
-      <Button label='Salvar' type="submit" onClick={formik.handleSubmit as any} severity="info" />
+      <Button
+        label="Cancelar"
+        type="button"
+        onClick={handleCloseModal}
+        severity="danger"
+        text
+      />
+      <Button
+        label="Salvar"
+        type="submit"
+        onClick={formik.handleSubmit as any}
+        severity="info"
+      />
     </div>
   );
 
@@ -167,12 +186,12 @@ const HomePage: NextPage<HomeProps> = (props) => {
 
     if (data?.products.length > 0) {
       data?.products?.forEach((v: any) => {
-        quantity += v?.stock
-      })
+        quantity += v?.stock;
+      });
     }
 
     return quantity;
-  }
+  };
 
   return (
     <div className="grid">
@@ -180,10 +199,17 @@ const HomePage: NextPage<HomeProps> = (props) => {
         <div className="card mb-0">
           <div className="flex justify-content-between mb-3">
             <div>
-              <span className="block text-500 font-medium mb-3">Total de produtos</span>
-              <div className="text-900 font-medium text-xl">{data?.products?.length}</div>
+              <span className="block text-500 font-medium mb-3">
+                Total de produtos
+              </span>
+              <div className="text-900 font-medium text-xl">
+                {data?.products?.length}
+              </div>
             </div>
-            <div className="flex align-items-center justify-content-center bg-blue-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
+            <div
+              className="flex align-items-center justify-content-center bg-blue-100 border-round"
+              style={{ width: "2.5rem", height: "2.5rem" }}
+            >
               <i className="pi pi-shopping-cart text-blue-500 text-xl" />
             </div>
           </div>
@@ -194,10 +220,17 @@ const HomePage: NextPage<HomeProps> = (props) => {
         <div className="card mb-0">
           <div className="flex justify-content-between mb-3">
             <div>
-              <span className="block text-500 font-medium mb-3">Total estoque</span>
-              <div className="text-900 font-medium text-xl">{getTotalStock()}</div>
+              <span className="block text-500 font-medium mb-3">
+                Total estoque
+              </span>
+              <div className="text-900 font-medium text-xl">
+                {getTotalStock()}
+              </div>
             </div>
-            <div className="flex align-items-center justify-content-center bg-green-100 border-round" style={{ width: '2.5rem', height: '2.5rem' }}>
+            <div
+              className="flex align-items-center justify-content-center bg-green-100 border-round"
+              style={{ width: "2.5rem", height: "2.5rem" }}
+            >
               <i className="pi pi-box text-green-500 text-xl" />
             </div>
           </div>
@@ -207,20 +240,50 @@ const HomePage: NextPage<HomeProps> = (props) => {
       <div className="col-12 xl:col-12">
         <div className="card">
           <h5>Produtos</h5>
-          <div className='my-5'>
-            <Button severity="success" icon="pi pi-plus" label="Novo" onClick={openModal} />
+          <div className="my-5">
+            <Button
+              severity="success"
+              icon="pi pi-plus"
+              label="Novo"
+              onClick={openModal}
+            />
           </div>
-          <DataTable value={data?.products} rows={5} paginator responsiveLayout="scroll">
+          <DataTable
+            value={data?.products}
+            rows={5}
+            paginator
+            responsiveLayout="scroll"
+          >
             <Column field="id" header="Código" sortable />
-            <Column field="description" header="Descrição" sortable style={{ width: '35%' }} />
-            <Column field="stock" header="Estoque" sortable style={{ width: '35%' }} />
+            <Column
+              field="description"
+              header="Descrição"
+              sortable
+              style={{ width: "35%" }}
+            />
+            <Column
+              field="stock"
+              header="Estoque"
+              sortable
+              style={{ width: "35%" }}
+            />
             <Column
               header="View"
-              style={{ width: '15%' }}
+              style={{ width: "15%" }}
               body={(rowData) => (
                 <>
-                  <Button icon="pi pi-pencil" onClick={() => openModal(rowData)} severity="warning" text />
-                  <Button icon="pi pi-trash" onClick={() => handleDelete(rowData.id)} severity="danger" text />
+                  <Button
+                    icon="pi pi-pencil"
+                    onClick={() => openModal(rowData)}
+                    severity="warning"
+                    text
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    onClick={() => handleDelete(rowData.id)}
+                    severity="danger"
+                    text
+                  />
                 </>
               )}
             />
@@ -228,13 +291,13 @@ const HomePage: NextPage<HomeProps> = (props) => {
         </div>
         <Modal
           visible={modalVisible}
-          style={{ width: '50vw' }}
+          style={{ width: "50vw" }}
           header="Novo produto"
           onHide={handleCloseModal}
           footer={footerContent}
         >
           <form className="my-5" onSubmit={formik.handleSubmit}>
-            <div className='flex flex-column field col-12'>
+            <div className="flex flex-column field col-12">
               <InputText
                 id="description"
                 className={`${formik?.errors?.description && "p-invalid"}`}
@@ -242,9 +305,11 @@ const HomePage: NextPage<HomeProps> = (props) => {
                 value={formik?.values?.description}
                 onChange={formik.handleChange}
               />
-              {formik?.errors?.description && <small className="p-error">{formik?.errors?.description}</small>}
+              {formik?.errors?.description && (
+                <small className="p-error">{formik?.errors?.description}</small>
+              )}
             </div>
-            <div className='flex flex-column field col-3'>
+            <div className="flex flex-column field col-3">
               <InputText
                 id="stock"
                 type="number"
@@ -253,7 +318,9 @@ const HomePage: NextPage<HomeProps> = (props) => {
                 value={formik?.values?.stock?.toString()}
                 onChange={formik.handleChange}
               />
-              {formik?.errors?.stock && <small className="p-error">{formik?.errors?.stock}</small>}
+              {formik?.errors?.stock && (
+                <small className="p-error">{formik?.errors?.stock}</small>
+              )}
             </div>
           </form>
         </Modal>
@@ -261,7 +328,7 @@ const HomePage: NextPage<HomeProps> = (props) => {
       <Toast ref={toastRef} position="top-right" />
     </div>
   );
-}
+};
 
 export async function getServerSideProps(context: any) {
   const isAuthenticated = checkAuthentication();
@@ -269,7 +336,7 @@ export async function getServerSideProps(context: any) {
   if (!isAuthenticated) {
     return {
       redirect: {
-        destination: '/auth/login',
+        destination: "/auth/login",
         permanent: false,
       },
     };

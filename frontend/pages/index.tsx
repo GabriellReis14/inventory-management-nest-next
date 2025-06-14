@@ -1,12 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
-import LoginPage from './auth/login';
-import HomePage from './home';
+import React from "react";
+import HomePage from "./home";
 
 const Dashboard = () => {
-
-  return (
-    <HomePage />
-  );
-}
+  return <HomePage />;
+};
 export default Dashboard;
