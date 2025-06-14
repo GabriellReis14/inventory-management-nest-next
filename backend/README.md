@@ -47,6 +47,8 @@ npx prisma migrate dev --name init
 npm run start:dev
 ```
 
+Por padrão, o projeto usa SQLite para facilitar os testes locais, mas com poucas alterações no .env pode ser apontado para PostgreSQL.
+
 ---
 
 ## ✅ Observação sobre CORS:
